@@ -1,0 +1,4 @@
+KERNEL=="sd*", ATTRS{idVendor}=="a69c", ATTRS{idProduct}=="5721",  SYMLINK+="aicudisk", RUN+="/usr/sbin/eject /dev/%k"
+KERNEL=="sd*", ATTRS{idVendor}=="a69c", ATTRS{idProduct}=="5723",  SYMLINK+="tendaudisk", RUN+="/usr/sbin/eject /dev/%k"
+KERNEL=="sd*", ATTRS{idVendor}=="a69c", ATTRS{idProduct}=="5724",  SYMLINK+="ugreenudisk", RUN+="/usr/sbin/eject /dev/%k"
+
