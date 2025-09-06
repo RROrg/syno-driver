@@ -12,7 +12,7 @@ include ../../mk/spksrc.common.mk
 
 MAINTAINER = RROrg/wjz304
 DESCRIPTION = "Realtek usb netcard driver for Synology NAS"
-CHANGELOG = "1. Support Realtek r815[2,3,5,6,7,a]"
+CHANGELOG = "1. Realtek r8152/6/7/9(kernel 3.x 4.x 5.x、armv8)、r8125/6/7(kernel 4.x+DSM7.2、5.x) 2. Marvell aqc107/111/113(kernel 4.x 5.x)"
 
 HOMEPAGE = https://www.kernel.org/
 LICENSE  = GPLv2
