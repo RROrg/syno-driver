@@ -25,6 +25,11 @@ call_func() {
 }
 
 start_daemon() {
+
+	if [ -f "/usr/rr/VERSION" ]; then
+        echo "⚠️ 当前环境下无需该套件!!! This package is not required in current environment!!!" >>${LOG_FILE}
+        return 0
+    fi
     if [ "$(id -u)" -ne 0 ]; then
         # If not running as root, use the current user
         echo -e "⚠️ This package requires root privileges, please run as root!!!" | tee -a $SYNOPKG_TEMP_LOGFILE
