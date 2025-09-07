@@ -15,10 +15,10 @@ createifcfg() {
     grep -q ${ETHX} /usr/syno/etc/synoovs/ovs_ignore.conf 2>/dev/null && sed -i "/${ETHX}/d" /usr/syno/etc/synoovs/ovs_ignore.conf
     grep -q ${ETHX} /usr/syno/etc/synoovs/ovs_interface.conf 2>/dev/null || echo ${ETHX} >>/usr/syno/etc/synoovs/ovs_interface.conf
     if [ ! -f "/etc/sysconfig/network-scripts/ifcfg-${ETHX}" ]; then
-      echo -e "DEVICE=${ETHX}\nONBOOT=yes\nBOOTPROTO=dhcp\nIPV6INIT=dhcp\nIPV6_ACCEPT_RA=1\nBRIDGE=ovs_${ETHX}" >"/etc/sysconfig/network-scripts/ifcfg-${ETHX}"
+      echo -e "DEVICE=${ETHX}\nONBOOT=yes\nBOOTPROTO=dhcp\nIPV6INIT=auto_dhcp\nIPV6_ACCEPT_RA=1\nBRIDGE=ovs_${ETHX}" >"/etc/sysconfig/network-scripts/ifcfg-${ETHX}"
     fi
     if [ ! -f "/etc/sysconfig/network-scripts/ifcfg-ovs_${ETHX}" ]; then
-      echo -e "DEVICE=ovs_${ETHX}\nONBOOT=yes\nBOOTPROTO=dhcp\nIPV6INIT=dhcp\nIPV6_ACCEPT_RA=1\nPRIMARY=${ETHX}\nTYPE=OVS" >"/etc/sysconfig/network-scripts/ifcfg-ovs_${ETHX}"
+      echo -e "DEVICE=ovs_${ETHX}\nONBOOT=yes\nBOOTPROTO=dhcp\nIPV6INIT=auto_dhcp\nIPV6_ACCEPT_RA=1\nPRIMARY=${ETHX}\nTYPE=OVS" >"/etc/sysconfig/network-scripts/ifcfg-ovs_${ETHX}"
     fi
     if [ ! "$(ovs-vsctl iface-to-br ${ETHX})" = "ovs_${ETHX}" ]; then
       ovs-vsctl br-exists ovs_${ETHX}
@@ -29,7 +29,7 @@ createifcfg() {
     ip link set ovs_${ETHX} up
   else
     if [ ! -f "/etc/sysconfig/network-scripts/ifcfg-${ETHX}" ]; then
-      echo -e "DEVICE=${ETHX}\nONBOOT=yes\nBOOTPROTO=dhcp\nIPV6INIT=dhcp\nIPV6_ACCEPT_RA=1" >"/etc/sysconfig/network-scripts/ifcfg-${ETHX}"
+      echo -e "DEVICE=${ETHX}\nONBOOT=yes\nBOOTPROTO=dhcp\nIPV6INIT=auto_dhcp\nIPV6_ACCEPT_RA=1" >"/etc/sysconfig/network-scripts/ifcfg-${ETHX}"
     fi
   fi
 }

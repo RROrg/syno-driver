@@ -1,6 +1,6 @@
 SPK_NAME = syno-network
 SPK_VERS = 1.0
-SPK_REV = 2
+SPK_REV = 3
 SPK_ICON = src/$(SPK_NAME).png
 
 DEPENDS = 
