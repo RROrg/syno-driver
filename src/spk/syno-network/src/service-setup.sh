@@ -99,38 +99,59 @@ service_prestart() {
   done
 
   # aqc111
-  /sbin/lsmod | grep -wq "^aqc111" && /sbin/rmmod -f aqc111
-  /sbin/insmod "${LMK_PATH}/aqc111.ko"
-
+  if [ -f "${LMK_PATH}/aqc111.ko" ]; then
+    /sbin/lsmod | grep -wq "^aqc111" && /sbin/rmmod -f aqc111
+    /sbin/insmod "${LMK_PATH}/aqc111.ko"
+  fi
   # asix
-  /sbin/insmod "${LMK_PATH}/libphy.ko" || true
-  /sbin/lsmod | grep -wq "^asix" && /sbin/rmmod -f asix
-  /sbin/insmod "${LMK_PATH}/asix.ko"
+  if [ -f "${LMK_PATH}/asix.ko" ]; then
+    /sbin/insmod "${LMK_PATH}/libphy.ko" || true
+    /sbin/lsmod | grep -wq "^asix" && /sbin/rmmod -f asix
+    /sbin/insmod "${LMK_PATH}/asix.ko"
+  fi
 
   # atlantic
-  /sbin/insmod "${LMK_PATH}/crc-itu-t.ko" || true
-  /sbin/lsmod | grep -wq "^atlantic" && /sbin/rmmod -f atlantic
-  /sbin/insmod "${LMK_PATH}/atlantic.ko"
+  if [ -f "${LMK_PATH}/atlantic.ko" ]; then
+    /sbin/insmod "${LMK_PATH}/crc-itu-t.ko" || true
+    /sbin/lsmod | grep -wq "^atlantic" && /sbin/rmmod -f atlantic
+    /sbin/insmod "${LMK_PATH}/atlantic.ko"
+  fi
 
   # ax88179_178a
-  /sbin/lsmod | grep -wq "^ax88179_178a" && /sbin/rmmod -f ax88179_178a
-  /sbin/insmod "${LMK_PATH}/ax88179_178a.ko"
+  if [ -f "${LMK_PATH}/ax88179_178a.ko" ]; then
+    /sbin/lsmod | grep -wq "^ax88179_178a" && /sbin/rmmod -f ax88179_178a
+    /sbin/insmod "${LMK_PATH}/ax88179_178a.ko"
+  fi
 
   # r8152
-  /sbin/lsmod | grep -wq "^r8152" && /sbin/rmmod -f r8152
-  /sbin/insmod "${LMK_PATH}/r8152.ko"
+  if [ -f "${LMK_PATH}/r8152.ko" ]; then
+    /sbin/lsmod | grep -wq "^r8152" && /sbin/rmmod -f r8152
+    /sbin/insmod "${LMK_PATH}/r8152.ko"
+  fi
 
   # r8125
-  for I in $(/sbin/lsmod | grep -q "^r8125"); do /sbin/rmmod -f "${I}"; done
-  /sbin/insmod "${LMK_PATH}/r8125.ko"
+  if [ -f "${LMK_PATH}/r8125.ko" ]; then
+    for I in $(/sbin/lsmod | grep -q "^r8125"); do /sbin/rmmod -f "${I}"; done
+    /sbin/insmod "${LMK_PATH}/r8125.ko"
+  fi
 
   # r8126
-  for I in $(/sbin/lsmod | grep -q "^r8126"); do /sbin/rmmod -f "${I}"; done
-  /sbin/insmod "${LMK_PATH}/r8126.ko"
+  if [ -f "${LMK_PATH}/r8126.ko" ]; then
+    for I in $(/sbin/lsmod | grep -q "^r8126"); do /sbin/rmmod -f "${I}"; done
+    /sbin/insmod "${LMK_PATH}/r8126.ko"
+  fi
 
   # r8127
-  for I in $(/sbin/lsmod | grep -q "^r8127"); do /sbin/rmmod -f "${I}"; done
-  /sbin/insmod "${LMK_PATH}/r8127.ko"
+  if [ -f "${LMK_PATH}/r8127.ko" ]; then
+    for I in $(/sbin/lsmod | grep -q "^r8127"); do /sbin/rmmod -f "${I}"; done
+    /sbin/insmod "${LMK_PATH}/r8127.ko"
+  fi
+
+  # igc
+  if [ -f "${LMK_PATH}/igc.ko" ]; then
+    /sbin/lsmod | grep -wq "^igc" && /sbin/rmmod -f igc
+    /sbin/insmod "${LMK_PATH}/igc.ko"
+  fi
 
 }
 
@@ -171,6 +192,8 @@ service_poststop() {
 
   /sbin/lsmod | grep -wq "^aqc111" && /sbin/rmmod -f aqc111 || true
 
+  /sbin/lsmod | grep -wq "^igc" && /sbin/rmmod -f igc || true
+
   # Remove kernel modules
   for M in usbcore.ko usbnet.ko mii.ko; do
     /sbin/lsmod | grep -wq "^$(echo "${M}" | sed 's/-/_/')" && /sbin/rmmod "${M}" || true
@@ -178,7 +201,7 @@ service_poststop() {
 
   # Remove firmware path from running kernel
   SYS_LFW_PATH="/sys/module/firmware_class/parameters/path" # System module
-  echo "$(grep -v "${LFW_PATH}" "${SYS_LFW_PATH}")" > "${SYS_LFW_PATH}"
+  echo "$(grep -v "${LFW_PATH}" "${SYS_LFW_PATH}")" >"${SYS_LFW_PATH}"
 
   # Remove udev rules from system
   HAS_RULES=false
