@@ -93,6 +93,7 @@ eth*)
     }
     /etc/rc.network "${ACTION}" "${MASTER}"
   elif [ -n "${BRIDGE}" ]; then
+    [ "${ACTION}" = "start" ] && /etc/rc.network "stop" "${ETHX}"
     /etc/rc.network "${ACTION}" "${BRIDGE}"
   else
     /etc/rc.network "${ACTION}" "${ETHX}"
