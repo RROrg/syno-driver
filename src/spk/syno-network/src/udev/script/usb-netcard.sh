@@ -6,7 +6,7 @@
 # See /LICENSE for more information.
 #
 
-ACTION=$([ "${1}" = "add" ] && echo "start" || echo "stop")
+ACTION=$([ "${1}" = "add" ] && echo "restart" || echo "stop")
 NAME=${2}
 
 IFCFGPRE="/etc/sysconfig/network-scripts/ifcfg-"
@@ -80,20 +80,19 @@ deleteifcfg() {
 
 case "${NAME}" in
 eth*)
-  # [ "active" = "$(systemctl is-active network.target)" ] || exit 0
   ETHX=${NAME}
-  [ "${ACTION}" = "start" ] && createifcfg "${ETHX}" # || deleteifcfg "${ETHX}"
+  [ "${ACTION}" = "restart" ] && createifcfg "${ETHX}" # || deleteifcfg "${ETHX}"
   BRIDGE=$(get_key_value "${IFCFGPRE}${ETHX}" "BRIDGE" 2>/dev/null)
   MASTER=$(get_key_value "${IFCFGPRE}${ETHX}" "MASTER" 2>/dev/null)
   if [ -n "${MASTER}" ]; then
-    [ "${ACTION}" = "start" ] && {
+    [ "${ACTION}" = "restart" ] && {
       set_kv "${IFCFGPRE}${ETHX}" "SLAVE" "no"
       /etc/rc.network "stop" "${ETHX}"
       set_kv "${IFCFGPRE}${ETHX}" "SLAVE" "yes"
     }
     /etc/rc.network "${ACTION}" "${MASTER}"
   elif [ -n "${BRIDGE}" ]; then
-    [ "${ACTION}" = "start" ] && /etc/rc.network "stop" "${ETHX}"
+    [ "${ACTION}" = "restart" ] && /etc/rc.network "stop" "${ETHX}"
     /etc/rc.network "${ACTION}" "${BRIDGE}"
   else
     /etc/rc.network "${ACTION}" "${ETHX}"
@@ -101,7 +100,7 @@ eth*)
   ;;
 usb*)
   ETHX=$(echo "${NAME}" | sed 's/usb/eth7/')
-  if [ "${ACTION}" = "start" ]; then
+  if [ "${ACTION}" = "restart" ]; then
     ip link set "${NAME}" down
     ip link set dev "${NAME}" name "${ETHX}"
     ip link set "${ETHX}" up
@@ -123,7 +122,7 @@ usb*)
   ;;
 wlan*)
   ETHX=$(echo "${NAME}" | sed 's/wlan/eth8/')
-  if [ "${ACTION}" = "start" ]; then
+  if [ "${ACTION}" = "restart" ]; then
     ip link set "${NAME}" down
     ip link set dev "${NAME}" name "${ETHX}"
     ip link set "${ETHX}" up
