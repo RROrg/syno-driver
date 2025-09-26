@@ -6,6 +6,14 @@
 # See /LICENSE for more information.
 #
 
+# Logging
+_log() {
+  echo "netcard: $*"
+  /bin/logger -p "error" -t "netcard" "$@"
+}
+
+_log "ACTION=${1}, NAME=${2}"
+
 ACTION=$([ "${1}" = "add" ] && echo "restart" || echo "stop")
 NAME=${2}
 
@@ -86,6 +94,7 @@ eth*)
   MASTER=$(get_key_value "${IFCFGPRE}${ETHX}" "MASTER" 2>/dev/null)
   if [ -n "${MASTER}" ]; then
     [ "${ACTION}" = "restart" ] && {
+      [ -z "${BRIDGE}" ] && /etc/rc.network "${ACTION}" "${ETHX}"
       set_kv "${IFCFGPRE}${ETHX}" "SLAVE" "no"
       /etc/rc.network "stop" "${ETHX}"
       set_kv "${IFCFGPRE}${ETHX}" "SLAVE" "yes"
