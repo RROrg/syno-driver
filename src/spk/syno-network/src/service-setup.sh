@@ -174,6 +174,8 @@ service_poststop() {
   fi
   LMK_PATH="${SYNOPKG_PKGDEST}/modules/${PLATFORM}-${KPRE:+${KPRE}-}${KVER}"
 
+  /sbin/lsmod | grep -wq "^igc" && /sbin/rmmod -f igc || true
+
   /sbin/lsmod | grep -wq "^r8127" && /sbin/rmmod -f r8127 || true
 
   /sbin/lsmod | grep -wq "^r8126" && /sbin/rmmod -f r8126 || true
@@ -186,13 +188,9 @@ service_poststop() {
 
   /sbin/lsmod | grep -wq "^atlantic" && /sbin/rmmod -f atlantic || true
 
-  /sbin/lsmod | grep -wq "^ax88179_178a" && /sbin/rmmod -f ax88179_178a || true
-
   /sbin/lsmod | grep -wq "^asix" && /sbin/rmmod -f asix || true
 
   /sbin/lsmod | grep -wq "^aqc111" && /sbin/rmmod -f aqc111 || true
-
-  /sbin/lsmod | grep -wq "^igc" && /sbin/rmmod -f igc || true
 
   # Remove kernel modules
   for M in usbcore.ko usbnet.ko mii.ko; do
