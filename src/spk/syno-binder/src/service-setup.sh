@@ -57,13 +57,11 @@ service_prestart() {
   _release=$(/bin/uname -r)
   KVER="$(/bin/echo ${_release%%[-+]*} | /usr/bin/cut -d'.' -f1-3)"
   PLATFORM=$(get_key_value /etc/synoinfo.conf platform_name)
-  if [ "$(echo "${KVER:-4}" | cut -d'.' -f1)" -lt 5 ]; then
-    KPRE=""
-  else
-    majorversion="$(/bin/get_key_value /etc/VERSION majorversion)"
-    minorversion="$(/bin/get_key_value /etc/VERSION minorversion)"
-    KPRE="${majorversion}.${minorversion}"
-  fi
+
+  majorversion="$(/bin/get_key_value /etc/VERSION majorversion)"
+  minorversion="$(/bin/get_key_value /etc/VERSION minorversion)"
+  KPRE="${majorversion}.${minorversion}"
+
   LMK_PATH="${SYNOPKG_PKGDEST}/modules/${PLATFORM}-${KPRE:+${KPRE}-}${KVER}"
 
   # Add udev rules to system
@@ -115,13 +113,11 @@ service_poststop() {
   _release=$(/bin/uname -r)
   KVER="$(/bin/echo ${_release%%[-+]*} | /usr/bin/cut -d'.' -f1-3)"
   PLATFORM=$(get_key_value /etc/synoinfo.conf platform_name)
-  if [ "$(echo "${KVER:-4}" | cut -d'.' -f1)" -lt 5 ]; then
-    KPRE=""
-  else
-    majorversion="$(/bin/get_key_value /etc/VERSION majorversion)"
-    minorversion="$(/bin/get_key_value /etc/VERSION minorversion)"
-    KPRE="${majorversion}.${minorversion}"
-  fi
+
+  majorversion="$(/bin/get_key_value /etc/VERSION majorversion)"
+  minorversion="$(/bin/get_key_value /etc/VERSION minorversion)"
+  KPRE="${majorversion}.${minorversion}"
+
   LMK_PATH="${SYNOPKG_PKGDEST}/modules/${PLATFORM}-${KPRE:+${KPRE}-}${KVER}"
 
   /sbin/lsmod | grep -wq "^ashmem_linux" && /sbin/rmmod -f ashmem_linux || true
