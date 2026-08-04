@@ -1,6 +1,6 @@
 SPK_NAME = syno-binder
 SPK_VERS = 1.0
-SPK_REV = 4
+SPK_REV = 12
 SPK_ICON = src/$(SPK_NAME).png
 
 DEPENDS = 

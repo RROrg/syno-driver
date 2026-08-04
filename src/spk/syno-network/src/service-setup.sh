@@ -48,6 +48,33 @@ service_postupgrade() {
 # The regular solution is to use configuration files for services
 
 service_prestart() {
+  [ -L "/usr/sbin/modinfo" ] || ln -vsf /usr/bin/kmod /usr/sbin/modinfo
+  _insmod_depends() {
+    local mod_path="$1"
+    local mod_name
+    mod_name="$(basename "${mod_path}" .ko | sed 's/-/_/g')"
+
+    # Already loaded?
+    /sbin/lsmod | grep -wq "^${mod_name}" && return 0
+
+    # File exists?
+    [ ! -f "${mod_path}" ] && return 1
+
+    # Resolve and load dependencies
+    local depends
+    depends=$(/sbin/modinfo -F depends "${mod_path}" 2>/dev/null | sed 's/,/ /g')
+    for dep in ${depends}; do
+        local dep_path
+        for P in "$(dirname "${mod_path}")" "/usr/lib/modules"; do
+            dep_path="${P}/${dep}.ko"
+            [ -f "${dep_path}" ] && { _insmod_depends "${dep_path}"; break; }
+        done
+    done
+
+    # Now load the module itself
+    /sbin/insmod "${mod_path}"
+  }
+
   # use echo to write to the service log file.
   echo "service_prestart: Before service start"
 
@@ -89,71 +116,47 @@ service_prestart() {
   SYS_LFW_PATH="/sys/module/firmware_class/parameters/path" # System module firmware path file index
   grep -q "${LFW_PATH}" "${SYS_LFW_PATH}" || echo "${LFW_PATH}" >>"${SYS_LFW_PATH}"
 
-  # install kernel modules
-  for M in mii.ko usbnet.ko usbcore.ko; do
-    for P in "${LMK_PATH}" "/usr/lib/modules"; do
-      /sbin/lsmod | grep -wq "^$(echo "${M}" | sed 's/-/_/')" && break || /sbin/insmod "${P}/${M}.ko" 2>/dev/null
-    done
+  # Load network driver modules - dependencies resolved automatically via _insmod_depends
+  for M in aqc111.ko asix.ko atlantic.ko ax88179_178a.ko igc.ko r8152.ko r8125.ko r8126.ko r8127.ko; do
+    if [ -f "${LMK_PATH}/${M}" ]; then
+      MN="$(echo "${M}" | sed 's/\.ko//')"
+      /sbin/lsmod | grep -wq "^$(echo "${MN}" | sed 's/-/_/g')" && /sbin/rmmod -f "${MN}"
+      _insmod_depends "${LMK_PATH}/${M}"
+    fi
   done
-
-  # aqc111
-  if [ -f "${LMK_PATH}/aqc111.ko" ]; then
-    /sbin/lsmod | grep -wq "^aqc111" && /sbin/rmmod -f aqc111
-    /sbin/insmod "${LMK_PATH}/aqc111.ko"
-  fi
-  # asix
-  if [ -f "${LMK_PATH}/asix.ko" ]; then
-    /sbin/insmod "${LMK_PATH}/libphy.ko" || true
-    /sbin/lsmod | grep -wq "^asix" && /sbin/rmmod -f asix
-    /sbin/insmod "${LMK_PATH}/asix.ko"
-  fi
-
-  # atlantic
-  if [ -f "${LMK_PATH}/atlantic.ko" ]; then
-    /sbin/insmod "${LMK_PATH}/crc-itu-t.ko" || true
-    /sbin/lsmod | grep -wq "^atlantic" && /sbin/rmmod -f atlantic
-    /sbin/insmod "${LMK_PATH}/atlantic.ko"
-  fi
-
-  # ax88179_178a
-  if [ -f "${LMK_PATH}/ax88179_178a.ko" ]; then
-    /sbin/lsmod | grep -wq "^ax88179_178a" && /sbin/rmmod -f ax88179_178a
-    /sbin/insmod "${LMK_PATH}/ax88179_178a.ko"
-  fi
-
-  # r8152
-  if [ -f "${LMK_PATH}/r8152.ko" ]; then
-    /sbin/lsmod | grep -wq "^r8152" && /sbin/rmmod -f r8152
-    /sbin/insmod "${LMK_PATH}/r8152.ko"
-  fi
-
-  # r8125
-  if [ -f "${LMK_PATH}/r8125.ko" ]; then
-    for I in $(/sbin/lsmod | grep -q "^r8125"); do /sbin/rmmod -f "${I}"; done
-    /sbin/insmod "${LMK_PATH}/r8125.ko"
-  fi
-
-  # r8126
-  if [ -f "${LMK_PATH}/r8126.ko" ]; then
-    for I in $(/sbin/lsmod | grep -q "^r8126"); do /sbin/rmmod -f "${I}"; done
-    /sbin/insmod "${LMK_PATH}/r8126.ko"
-  fi
-
-  # r8127
-  if [ -f "${LMK_PATH}/r8127.ko" ]; then
-    for I in $(/sbin/lsmod | grep -q "^r8127"); do /sbin/rmmod -f "${I}"; done
-    /sbin/insmod "${LMK_PATH}/r8127.ko"
-  fi
-
-  # igc
-  if [ -f "${LMK_PATH}/igc.ko" ]; then
-    /sbin/lsmod | grep -wq "^igc" && /sbin/rmmod -f igc
-    /sbin/insmod "${LMK_PATH}/igc.ko"
-  fi
 
 }
 
 service_poststop() {
+  _rmmod_depends() {
+    local mod_name="$1"
+    local mod_name_safe
+    mod_name_safe="$(echo "${mod_name}" | sed 's/-/_/g')"
+
+    # Not loaded? Skip
+    /sbin/lsmod | grep -wq "^${mod_name_safe}" || return 0
+
+    # Find modules that depend on this one (from /proc/modules)
+    local dependents
+    dependents=$(/bin/awk -v target="${mod_name_safe}" '
+    {
+        if ($1 == target) next
+        if ($3 == "0" || $4 == "-" || $4 == "") next
+        split($4, deps, ",")
+        for (i in deps) {
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", deps[i])
+            if (deps[i] == target) print $1
+        }
+    }
+    ' /proc/modules 2>/dev/null)
+
+    for dep in ${dependents}; do
+        _rmmod_depends "${dep}"
+    done
+
+    /sbin/rmmod "${mod_name_safe}" 2>/dev/null || true
+  }
+
   # use echo to write to the service log file.
   echo "service_poststop: After service stop"
 
@@ -170,27 +173,9 @@ service_poststop() {
 
   LMK_PATH="${SYNOPKG_PKGDEST}/modules/${PLATFORM}-${KPRE:+${KPRE}-}${KVER}"
 
-  /sbin/lsmod | grep -wq "^igc" && /sbin/rmmod -f igc || true
-
-  /sbin/lsmod | grep -wq "^r8127" && /sbin/rmmod -f r8127 || true
-
-  /sbin/lsmod | grep -wq "^r8126" && /sbin/rmmod -f r8126 || true
-
-  /sbin/lsmod | grep -wq "^r8125" && /sbin/rmmod -f r8125 || true
-
-  /sbin/lsmod | grep -wq "^r8152" && /sbin/rmmod -f r8152 || true
-
-  /sbin/lsmod | grep -wq "^ax88179_178a" && /sbin/rmmod -f ax88179_178a || true
-
-  /sbin/lsmod | grep -wq "^atlantic" && /sbin/rmmod -f atlantic || true
-
-  /sbin/lsmod | grep -wq "^asix" && /sbin/rmmod -f asix || true
-
-  /sbin/lsmod | grep -wq "^aqc111" && /sbin/rmmod -f aqc111 || true
-
-  # Remove kernel modules
-  for M in usbcore.ko usbnet.ko mii.ko; do
-    /sbin/lsmod | grep -wq "^$(echo "${M}" | sed 's/-/_/')" && /sbin/rmmod "${M}" || true
+  for M in r8127.ko r8126.ko r8125.ko r8152.ko igc.ko ax88179_178a.ko atlantic.ko asix.ko aqc111.ko; do
+    MN="$(echo "${M}" | sed 's/\.ko//')"
+    _rmmod_depends "${MN}"
   done
 
   # Remove firmware path from running kernel
