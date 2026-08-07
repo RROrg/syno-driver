@@ -43,8 +43,9 @@ jobs:
         run: |
           ROOT_PATH="${{ github.workspace }}"
           MAKE_ARCH="arch-${{ matrix.target }}"
-          docker run -v ${ROOT_PATH}/spksrc:/spksrc -w /spksrc/spk/syno-network ghcr.io/synocommunity/spksrc make ${MAKE_ARCH}
-          docker run -v ${ROOT_PATH}/spksrc:/spksrc -w /spksrc/spk/syno-binder ghcr.io/synocommunity/spksrc make ${MAKE_ARCH}
+          for P in src/spk/*; do \
+            docker run -v ${ROOT_PATH}/spksrc:/spksrc -w /spksrc/spk/$(basename ${P}) ghcr.io/synocommunity/spksrc make ${MAKE_ARCH}; \
+          done
 
       - name: Upload to Artifacts
         uses: actions/upload-artifact@v7
