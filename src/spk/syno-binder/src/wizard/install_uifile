@@ -9,10 +9,10 @@
         "desc": "Please continue the installation until the package fails to start and shows 'Please try again later or contact the package developer' in the Package Center."
       },
       {
-        "desc": "Then you need to ssh into DSM and execute the command:<br/><code>sudo sed 's/package/root/g' -i /var/packages/syno-binder/conf/privilege</code>"
+        "desc": "Then you need to ssh into DSM and execute the command:<br/><code>sudo sed -i 's/package/root/g' /var/packages/syno-binder/conf/privilege</code>"
       },
       {
-        "desc": "Finally press <strong>Repair</strong> in the Package Center, or manually start the package in the ssh session with:<br/><code>sudo synopkg start syno-binder</code>"
+        "desc": "Finally press <strong>Repair</strong> in the Package Center, or manually start the package in the ssh session with:<br/><code>sudo synopkg restart syno-binder</code>"
       }
     ]
   }

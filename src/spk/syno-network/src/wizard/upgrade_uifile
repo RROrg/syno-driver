@@ -12,7 +12,7 @@
         "desc": "Than you need to ssh into DSM and execute the command:<br/><code>sudo sed -i 's/package/root/g' /var/packages/syno-network/conf/privilege</code>"
       },
       {
-        "desc": "Finally press <strong>Repair</strong> in the Package Center, or manually start the package in the ssh session with:<br/><code>sudo synopkg start syno-network</code>"
+        "desc": "Finally press <strong>Repair</strong> in the Package Center, or manually start the package in the ssh session with:<br/><code>sudo synopkg restart syno-network</code>"
       }
     ]
   }
